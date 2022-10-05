@@ -6,12 +6,12 @@ Since GitHub does not offer a way to display all running workflows in an organiz
 It uses the GitHub Webhooks for notifications and distributes them to all connected frontends.
 
 What I want to extends this with:
-- simple flat-file sqlite Database, for storing information about jobs so there is inital data. 
-- add normal workflows and not only jobs
-- calculate some fun statistics about jobs for BI
-- *Maybe* user-authentication some time
-- Integrate GitHub Webhook Authentication with tokens
-- Build docker-images and docker-compose file for easy peasy deployments
+- [] simple flat-file sqlite Database, for storing information about jobs so there is inital data. 
+- [] add normal workflows and not only jobs
+- [] calculate some fun statistics about jobs for BI
+- [] *Maybe* user-authentication some time
+- [] Integrate GitHub Webhook Authentication with tokens
+- [x] Build docker-images and docker-compose file for easy peasy deployments
 
 ## Installation
 soon :tm:
