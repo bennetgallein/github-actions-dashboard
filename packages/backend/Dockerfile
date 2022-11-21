@@ -11,6 +11,7 @@ ENV NODE_ENV production
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN npx ts-node ./src/create-schema.ts
 RUN npm run build
 
 ENTRYPOINT [ "npm", "run", "start:prod" ]
