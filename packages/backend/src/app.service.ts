@@ -1,3 +1,5 @@
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityRepository } from '@mikro-orm/sqlite';
 import { Injectable } from '@nestjs/common';
 import {
   WebhookEvent,
@@ -7,23 +9,38 @@ import {
   WorkflowRunEvent,
 } from '@octokit/webhooks-types';
 import { AppGateway } from './app.gateway';
+import { WorkflowJobEntity } from './entities/workflow_job.entity';
 @Injectable()
 export class AppService {
-  constructor(private readonly gateway: AppGateway) {}
+  constructor(
+    @InjectRepository(WorkflowJobEntity)
+    private readonly workflowRepo: EntityRepository<WorkflowJobEntity>,
+    private readonly gateway: AppGateway,
+  ) {}
 
-  handleHook(body: WorkflowJobEvent): any {
+  async handleHook(body: WorkflowJobEvent): Promise<void> {
     if (!('action' in body)) return;
 
-    const obj = {
-      createdAt: new Date(),
-      id: body.workflow_job.id,
-      repo: body.repository.name,
-      job: body.workflow_job.name,
-      status: body.workflow_job.status,
-      url: body.workflow_job.html_url,
-      conclusion: body.workflow_job.conclusion,
-    };
+    // check if we have that ID in the database already - if not, save new otherwise update
+    const exists = await this.workflowRepo.findOne({
+      githubId: body.workflow_job.id,
+    });
 
-    this.gateway.send(obj);
+    const obj: WorkflowJobEntity = Object.assign(
+      exists || new WorkflowJobEntity(),
+      {
+        createdAt: new Date(),
+        githubId: body.workflow_job.id,
+        repo: body.repository.name,
+        job: body.workflow_job.name,
+        status: body.workflow_job.status,
+        url: body.workflow_job.html_url,
+        conclusion: body.workflow_job.conclusion,
+      },
+    );
+
+    await this.workflowRepo.persistAndFlush(obj);
+
+    this.gateway.send([obj]);
   }
 }

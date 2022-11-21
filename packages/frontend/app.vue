@@ -66,40 +66,7 @@ import Spinner from "~icons/icomoon-free/spinner10";
 import Cross from "~icons/charm/circle-cross";
 
 const runtimeConfig = useRuntimeConfig();
-const events = ref([
-  {
-    conclusion: "success",
-    repo: "octo-org/example-repo",
-    url: "test",
-    job: "running tests",
-    status: "completed",
-    createdAt: new Date(),
-  },
-  {
-    conclusion: "failure",
-    repo: "octo-org/broken-repository",
-    url: "test",
-    job: "running tests",
-    status: "completed",
-    createdAt: new Date(),
-  },
-  {
-    conclusion: "",
-    repo: "octo-org/runner-timeout",
-    url: "test",
-    job: "running tests",
-    status: "in_progress",
-    createdAt: new Date(),
-  },
-  {
-    conclusion: "",
-    repo: "octo-org/runner-timeout",
-    url: "test",
-    job: "dev-deployment",
-    status: "in_progress",
-    createdAt: new Date(),
-  },
-]);
+const events = ref([]);
 
 const workflows = computed(() => {
   // resort events based on the following rules:
@@ -114,13 +81,16 @@ const workflows = computed(() => {
     (e) => e.conclusion == "success" && e.status == "completed"
   );
 
-  failed = failed.sort((a, b) => a.createdAt.getTime() > b.createdAt.getTime());
-  running = running.sort(
-    (a, b) => a.createdAt.getTime() > b.createdAt.getTime()
-  );
-  success = success.sort(
-    (a, b) => a.createdAt.getTime() > b.createdAt.getTime()
-  );
+  failed = failed.sort((a, b) => {
+    console.log(new Date(a.createdAt));
+    return new Date(a.createdAt).getTime() > new Date(b.createdAt).getTime();
+  });
+  running = running.sort((a, b) => {
+    return new Date(a.createdAt).getTime() > new Date(b.createdAt).getTime();
+  });
+  success = success.sort((a, b) => {
+    return new Date(a.createdAt).getTime() > new Date(b.createdAt).getTime();
+  });
 
   return [...failed, ...running, ...success];
 });
@@ -132,13 +102,17 @@ socket.on("connect", () => {
   console.log("connected");
 });
 
-socket.on("message", (payload) => {
+socket.on("message", (payloadArray) => {
   // find if we have this id alread in events, if not - add it, otherwise update
-  const ent = events.value.filter((e) => e.id == payload.id);
-  if (ent.length == 0) {
-    events.value.push(payload);
-  } else {
-    ent[0].status = payload.status;
+  if (Array.isArray(payloadArray)) {
+    payloadArray.map((payload) => {
+      const ent = events.value.filter((e) => e.id == payload.id);
+      if (ent.length == 0) {
+        events.value.push(payload);
+      } else {
+        ent[0].status = payload.status;
+      }
+    });
   }
 });
 </script>
